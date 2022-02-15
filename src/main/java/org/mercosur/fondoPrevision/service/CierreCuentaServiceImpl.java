@@ -450,8 +450,8 @@ public class CierreCuentaServiceImpl implements CierreCuentaService{
 		// Creación de registros de saldos historia y por el cierre
 		
 		SaldosHistoria saldosh = new SaldosHistoria();
-		SaldosHistoria saldoshult = saldosHistoriaRepository.getLastByTarjetaAndMesliquidacion(funcionario.getTarjeta(), mesliquidacion);
-		
+//		SaldosHistoria saldoshult = saldosHistoriaRepository.getLastByTarjetaAndMesliquidacion(funcionario.getTarjeta(), mesliquidacion);
+		SaldosHistoria saldoshult = saldosHistoriaRepository.getUltimoByTarjeta(funcionario.getTarjeta());
 		BigDecimal cdant = saldoshult.getCapitalDispActual();
 		BigDecimal ciant = saldoshult.getCapitalIntegActual();
 

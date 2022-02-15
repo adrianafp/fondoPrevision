@@ -118,6 +118,8 @@ public class CierreCuentaController {
 			model.addAttribute("cierrectaForm", form);
 			model.addAttribute("estadoDeCtaFinal", estadoFinal);
 			model.addAttribute("outputMode", true);
+			model.addAttribute("conlink", true);
+			
 		}
 		catch(Exception e) {
 			model.addAttribute("formError", e.getMessage());
@@ -152,6 +154,7 @@ public class CierreCuentaController {
 			Ayuda help = ayudaService.getByClave(clave);
 			model.addAttribute("help", help);
 			model.addAttribute("plantaList", gplantaService.getAllPlanta());
+			model.addAttribute("conlink", false);
 		}
 		catch(Exception e) {
 			model.addAttribute("formError", e.getMessage());
@@ -179,19 +182,22 @@ public class CierreCuentaController {
 			estadoCtaFromDatosCierre(estadoFinal, datosCierre);				
 		}
 		String headerValue = "attachment; filename=liqEgreso_" + estadoFinal.getFuncionario().getTarjeta() + ".xlsx";
+		String ultimoMesLiq;
 		
 		try {
 			Movimientos mov = movimientosRepository.getLastByFuncAndTipo(estadoFinal.getFuncionario().getTarjeta(), 2);
-			String ultimoMesLiq = mov.getMesliquidacion(); 
+			ultimoMesLiq = mov.getMesliquidacion(); 				
+
 			response.setHeader(headerKey, headerValue);
 			CierreCtaExcelExporter exporter = new CierreCtaExcelExporter(estadoFinal, mesDistribucion, mesLiqEgreso, ultimoMesLiq);
 			exporter.export(response);
 			
 		}
 		catch(Exception e) {
-			throw new Exception(e.getMessage());
-		}
+			model.addAttribute("formError", e.getMessage());
+			model.addAttribute("cierrectaFrom", form);
 
+		}
 	}
 
 	@GetMapping("/excelEstadoFinal/{id}")
