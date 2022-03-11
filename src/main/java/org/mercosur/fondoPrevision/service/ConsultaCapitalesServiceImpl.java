@@ -191,6 +191,8 @@ public class ConsultaCapitalesServiceImpl implements ConsultaCapitalesService{
 		
 			BigDecimal capdispante = BigDecimal.ZERO;
 			BigDecimal importeDistrib = BigDecimal.ZERO;
+			BigDecimal capdispactual = BigDecimal.ZERO;
+			BigDecimal capintegrado = BigDecimal.ZERO;
 			
 			if(conDistrib) {
 				Optional<ResultadoDistribucion> res = lstDistrib.stream().filter(rd -> f.getTarjeta().equals(rd.getTarjeta()))
@@ -209,6 +211,13 @@ public class ConsultaCapitalesServiceImpl implements ConsultaCapitalesService{
 				SaldosHistoria saldos = saldosHistoriaRepository.getUltimoByTarjeta(f.getTarjeta());
 				capdispante = saldos.getCapitalDispAntes();
 			}
+			
+				// agregado 11-03-2022 para obtener los capitales actuales en caso de la consulta sea
+				// para un mes anterior al mes en que egresó el funcionario.
+			SaldosHistoria sh = saldosHistoriaRepository.getLastByTarjetaAndMesliquidacion(f.getTarjeta(), mesliquidacion);
+			capdispactual = sh.getCapitalDispActual();
+			capintegrado = sh.getCapitalIntegActual();
+				// fin agregado.
 			
 			List<MovimientosHist> lstMovs = movimientosHistRepository.getByFuncAndMesliquidacion(t, mesliquidacion);				
 			BigDecimal cancelaciones = BigDecimal.ZERO;
@@ -264,8 +273,15 @@ public class ConsultaCapitalesServiceImpl implements ConsultaCapitalesService{
 			cfd.setTotalMovAportes(aportes);
 			cfd.setOtros(otros);
 			cfd.setRetiros(retiros);
-			cfd.setCapitalDispActual(BigDecimal.ZERO);
-			cfd.setCapitalIntegActual(BigDecimal.ZERO);
+			if(retiros.compareTo(BigDecimal.ZERO) > 0) {
+				// quiere decir que la consulta corresponde al mes en que se cerró la cta.
+				cfd.setCapitalDispActual(BigDecimal.ZERO);
+				cfd.setCapitalIntegActual(BigDecimal.ZERO);				
+			}
+			else {
+				cfd.setCapitalDispActual(capdispactual);
+				cfd.setCapitalIntegActual(capintegrado);
+			}
 			
 			lstcfd.add(cfd);
 		}

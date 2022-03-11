@@ -170,7 +170,7 @@ public class SaldosHistoriaRepositoryCustomImpl implements SaldosHistoriaReposit
 	public List<Integer> getTarjetasEgresosByMesliquidacion(String mesliquidacion) throws Exception {
 		
 		return entityManager.createQuery("select distinct sh.tarjeta from SaldosHistoria sh where sh.mesliquidacion =:mes " +
-				"and sh.tarjeta NOT IN (select distinct gp.tarjeta from org.mercosur.fondoPrevision.entities.Gplanta gp)")
+				"and sh.tarjeta IN (select distinct gph.tarjeta from org.mercosur.fondoPrevision.entities.Gplantahist gph)")
 				.setParameter("mes", mesliquidacion)
 				.getResultList();
 	}
