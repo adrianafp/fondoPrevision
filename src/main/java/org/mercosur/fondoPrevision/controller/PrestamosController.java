@@ -444,11 +444,16 @@ public class PrestamosController {
 								}
 							}
 						}
-						prst.setPrestamoNuevo(true);
+						TipoPrestamo tipoPrst = tipoPrestamoService.getById(form.getIdtipoprst());
+						if(tipoPrst.getCodigoPrestamo() == 1) {
+							prst.setPrestamoNuevo(true);							
+						}
+						else {
+							prst.setPrestamoNuevo(false);
+						}
 						prst.setFechaPrestamo(form.getFechaprestamo());
 						prst.setNroprestamo(form.getNroprestamo());
 						prst = prestamoService.savePrst(prst, form.getIdfuncionario(), form.getIdtipoprst());
-						TipoPrestamo tipoPrst = tipoPrestamoService.getById(form.getIdtipoprst());
 						model.addAttribute("tipoPrestamo", tipoPrst.getDescripcion());
 						Gplanta funcionario = gplantaService.getFuncionarioByTarjeta(form.getTarjeta());
 						model.addAttribute("funcionario", funcionario);
