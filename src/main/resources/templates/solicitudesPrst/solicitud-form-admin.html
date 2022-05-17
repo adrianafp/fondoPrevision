@@ -246,8 +246,15 @@
 	<script type="text/javascript">
 		$('#func-select').change(function (){
 			var idfunc = $(this).val();
-			window.location = "/fondoPrevision/completeInfo/"+idfunc;
-//			window.location = "/completeInfo/"+idfunc;
+			var path = window.location.pathname;
+			var url = path.substring(0, path.lastIndexOf('/') + 1);
+			if(path.indexOf('fondoPrevision') !== -1){
+				url = '/fondoPrevision/completeInfo/';
+			}
+			else{
+				url = '/completeInfo/';
+			}
+		    window.location = url + idfunc;
 		});
 		
 	</script>

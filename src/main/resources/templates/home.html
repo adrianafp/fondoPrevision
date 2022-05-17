@@ -12,7 +12,16 @@ function confirmDelete(id){
 
 function deleteSolicitud(){
 	var id = $("#solIdHiddenInput").val();
-    window.location = "/fondoPrevision/deleteSolicitud/"+id;
+	var path = window.location.pathname;
+	var url = path.substring(0, path.lastIndexOf('/') + 1);
+	if(path.indexOf('fondoPrevision') !== -1){
+		url = '/fondoPrevision/deleteSolicitud/';
+	}
+	else{
+		url = '/deleteSolicitud/';
+	}
+    window.location = url + id;
+    //window.location = "/fondoPrevision/deleteSolicitud/"+id;
 }
 </script>
 
