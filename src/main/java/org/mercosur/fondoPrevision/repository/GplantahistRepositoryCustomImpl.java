@@ -23,4 +23,9 @@ public class GplantahistRepositoryCustomImpl implements GplantahistRepositoryCus
 		.executeUpdate();
 	}
 
+	@Override
+	public Integer getLastTarjeta() throws Exception {
+		return (Integer) entityManager.createQuery("select Max(f.tarjeta) from Gplantahist f").getSingleResult();
+	}
+
 }

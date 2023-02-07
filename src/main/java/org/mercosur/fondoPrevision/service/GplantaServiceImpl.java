@@ -26,6 +26,7 @@ import org.mercosur.fondoPrevision.repository.FcodigosRepository;
 import org.mercosur.fondoPrevision.repository.GcargoRepository;
 import org.mercosur.fondoPrevision.repository.GorganigramaRepository;
 import org.mercosur.fondoPrevision.repository.GplantaRepository;
+import org.mercosur.fondoPrevision.repository.GplantahistRepository;
 import org.mercosur.fondoPrevision.repository.GvinculoFuncionarioCargoRepository;
 import org.mercosur.fondoPrevision.repository.MovimientosRepository;
 import org.mercosur.fondoPrevision.repository.ParametroRepository;
@@ -47,6 +48,9 @@ public class GplantaServiceImpl implements GplantaService {
 	
 	@Autowired
 	GplantaRepository gplantaRepository;
+	
+	@Autowired
+	GplantahistRepository gplantaHistRepository;
 
 	@Autowired
 	SaldosHistoriaRepository saldosHistoriaRepository;
@@ -487,8 +491,9 @@ public class GplantaServiceImpl implements GplantaService {
 	@Override
 	public Integer getLastTarjeta() throws Exception {
 		Integer ultimo = gplantaRepository.getLastTarjeta();
+		Integer ultimohist = gplantaHistRepository.getLastTarjeta();
 		
-		return (ultimo + 1);
+		return (ultimo > ultimohist? ultimo + 1: ultimohist + 1);
 	}
 
 	@Override
