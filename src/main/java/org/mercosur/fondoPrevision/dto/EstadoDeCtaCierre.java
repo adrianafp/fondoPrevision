@@ -27,6 +27,8 @@ public class EstadoDeCtaCierre implements Serializable{
 	
 	private BigDecimal sueldoUltimoMes;
 	
+	private BigDecimal basico;
+	
 	private BigDecimal aporteFun;
 	
 	private BigDecimal aportePat;
@@ -34,6 +36,8 @@ public class EstadoDeCtaCierre implements Serializable{
 	private BigDecimal aporteTotal;
 	
 	private BigDecimal importeAguinaldo;
+	
+	private BigDecimal sumaBasicos;
 	
 	private BigDecimal importeLicencia;
 	
@@ -228,4 +232,21 @@ public class EstadoDeCtaCierre implements Serializable{
 	public void setImporteLicencia(BigDecimal importeLicencia) {
 		this.importeLicencia = importeLicencia;
 	}
+
+	public BigDecimal getBasico() {
+		return basico;
+	}
+
+	public void setBasico(BigDecimal basico) {
+		this.basico = basico;
+	}
+
+	public BigDecimal getSumaBasicos() {
+		return sumaBasicos;
+	}
+
+	public void setSumaBasicos(BigDecimal sumaBasicos) {
+		this.sumaBasicos = sumaBasicos;
+	}
+
 }

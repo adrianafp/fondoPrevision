@@ -173,8 +173,8 @@ public class CierreCuentaServiceImpl implements CierreCuentaService{
 		BigDecimal resultEjerc = form.getResultEjercicio();
 		BigDecimal bdSuma = saldosHistoriaRepository.totalNumeralesSinDistribucion(mesliquidacion);
 		BigDecimal bdNumerales = saldosHistoriaRepository.numeralesFuncionario(mesliquidacion, funcionario.getTarjeta());
-		BigDecimal factor = resultEjerc.divide(bdSuma, 6, RoundingMode.HALF_DOWN);
-		BigDecimal bdLeToca = factor.multiply(bdNumerales).setScale(2, RoundingMode.HALF_UP); 
+		BigDecimal factor = bdNumerales.divide(bdSuma, 6, RoundingMode.HALF_DOWN);
+		BigDecimal bdLeToca = factor.multiply(resultEjerc).setScale(2, RoundingMode.HALF_DOWN); 
 				
 		capitalIntegFinal = capitalIntegFinal.add(bdLeToca);
 		estadoResult.setInteresesporcolocaciones(bdLeToca);
@@ -230,16 +230,34 @@ public class CierreCuentaServiceImpl implements CierreCuentaService{
 		
 		int days = fegreso.getDayOfMonth();
 		BigDecimal bddays = new BigDecimal(String.valueOf(days));
+		
+		//Corrección de marzo/2023 - Para calcular el salario diario se divide el 
+		// nominal sobre 30 siempre. */
+
+/*		
 		int lastday = fegreso.lengthOfMonth();
 		BigDecimal bdlastday = new BigDecimal(String.valueOf(lastday));
-
+*/
+		BigDecimal bdtreintaDias = new BigDecimal(String.valueOf(30));
+		
 		BigDecimal sueldomes = basico.add(complemento);
-		sueldomes = sueldomes.divide(bdlastday, 2, RoundingMode.HALF_DOWN);
+		sueldomes = sueldomes.divide(bdtreintaDias, 2, RoundingMode.HALF_DOWN);
 		sueldomes = sueldomes.multiply(bddays);
 		
-		estadoResult.setSueldoUltimoMes(sueldomes);
 		
-		BigDecimal basicomes = basico.divide(bdlastday, 2, RoundingMode.HALF_DOWN);
+//		****** Corrección marzo 2023 ******
+//		sueldomes = sueldomes.divide(bdlastday, 2, RoundingMode.HALF_DOWN);
+	
+		
+		estadoResult.setSueldoUltimoMes(sueldomes);
+		estadoResult.setBasico(basico.divide(bdtreintaDias, 2, RoundingMode.HALF_DOWN));
+		
+		
+		// ***** Corrección marxo 2023 *****
+//		BigDecimal basicomes = basico.divide(bdlastday, 2, RoundingMode.HALF_DOWN);
+//		basicomes = basicomes.multiply(bddays);
+	
+		BigDecimal basicomes = basico.divide(bdtreintaDias, 2, RoundingMode.HALF_DOWN);
 		basicomes = basicomes.multiply(bddays);
 		
 		for(Parametro p:lstPar) {
@@ -280,10 +298,18 @@ public class CierreCuentaServiceImpl implements CierreCuentaService{
 		BigDecimal bdSumabasicos = sumaBasicos(mesliqinicial, mesliquidacion, func.getTarjeta());
 		BigDecimal bdSumacomp = sumaComplementos(mesliqinicial, mesliquidacion, func.getTarjeta());
 		
+		// **** Correción Marzo 2023 ****
+		
+		BigDecimal bdtreintaDias = new BigDecimal(String.valueOf(30));
+		int days = fegreso.getDayOfMonth();
+		BigDecimal bddays = new BigDecimal(String.valueOf(days));
+		
 		BigDecimal basicoactual = func.getGcargo().getBasico();
-		basicoactual = basicoactual.divide(new BigDecimal((long)fegreso.lengthOfMonth()), 2, RoundingMode.HALF_DOWN).multiply(new BigDecimal((long)fegreso.getDayOfMonth()));
+		basicoactual = basicoactual.divide(bdtreintaDias, 2, RoundingMode.HALF_DOWN);
+		basicoactual = basicoactual.multiply(bddays);
 		BigDecimal complactual = func.getGcargo().getComplemento();
-		complactual = complactual.divide(new BigDecimal((long)fegreso.lengthOfMonth()), 2, RoundingMode.HALF_DOWN).multiply(new BigDecimal((long)fegreso.getDayOfMonth()));
+		complactual = complactual.divide(bdtreintaDias, 2, RoundingMode.HALF_DOWN);
+		complactual = complactual.multiply(bddays);
 		
 		bdSumabasicos = bdSumabasicos.add(basicoactual);
 		bdSumabasicos = bdSumabasicos.divide(divDoce, 2, RoundingMode.HALF_DOWN);
@@ -291,6 +317,7 @@ public class CierreCuentaServiceImpl implements CierreCuentaService{
 		bdSumacomp = bdSumacomp.divide(divDoce, 2, RoundingMode.HALF_DOWN);
 		
 		estadoResult.setImporteAguinaldo(bdSumabasicos.add(bdSumacomp));
+		estadoResult.setSumaBasicos(bdSumabasicos);
 		
 		for(Parametro p : lstPar) {
 			if(p.getDescripcion().contains("funcionario") || p.getDescripcion().contains("Funcionario")) {

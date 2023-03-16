@@ -1,6 +1,10 @@
 package org.mercosur.fondoPrevision.controller;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,15 +23,19 @@ import org.mercosur.fondoPrevision.entities.Movimientos;
 import org.mercosur.fondoPrevision.entities.MovimientosHist;
 import org.mercosur.fondoPrevision.entities.Prestamo;
 import org.mercosur.fondoPrevision.entities.Prestamohist;
+import org.mercosur.fondoPrevision.entities.SueldoMes;
 import org.mercosur.fondoPrevision.excel.CierreCtaExcelExporter;
+import org.mercosur.fondoPrevision.excel.CierreCtaExcelExportResumen;
 import org.mercosur.fondoPrevision.repository.DatosCierreCtaRepository;
 import org.mercosur.fondoPrevision.repository.DatosDistribucionRepository;
+import org.mercosur.fondoPrevision.repository.GcargoRepository;
 import org.mercosur.fondoPrevision.repository.GplantaRepository;
 import org.mercosur.fondoPrevision.repository.GplantahistRepository;
 import org.mercosur.fondoPrevision.repository.MovimientosHistRepository;
 import org.mercosur.fondoPrevision.repository.MovimientosRepository;
 import org.mercosur.fondoPrevision.repository.PrestamohistRepository;
 import org.mercosur.fondoPrevision.repository.SaldosRepository;
+import org.mercosur.fondoPrevision.repository.SueldoMesRepository;
 import org.mercosur.fondoPrevision.service.AyudaService;
 import org.mercosur.fondoPrevision.service.CierreCuentaService;
 import org.mercosur.fondoPrevision.service.GplantaService;
@@ -53,6 +61,9 @@ public class CierreCuentaController {
 	SaldosRepository saldosRepository;
 	
 	@Autowired
+	GcargoRepository gcargoRepository;
+	
+	@Autowired
 	GplantaRepository gplantaRepository;
 	
 	@Autowired
@@ -60,6 +71,9 @@ public class CierreCuentaController {
 	
 	@Autowired
 	GplantaService gplantaService;
+	
+	@Autowired
+	SueldoMesRepository sueldoMesRepository;
 	
 	@Autowired
 	MovimientosRepository movimientosRepository;
@@ -208,6 +222,7 @@ public class CierreCuentaController {
 			EstadoDeCtaCierre estadoFinal = new EstadoDeCtaCierre();
 
 			DatosCierreCta datosCierre = datosCierreRepository.getDatosByGplantaid(idfuncionario);
+
 			estadoCtaFromDatosCierre(estadoFinal, datosCierre);
 						
 			DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -221,24 +236,61 @@ public class CierreCuentaController {
 			String ultimoMesLiq = mov.getMesliquidacion(); 
 			
 			response.setHeader(headerKey, headerValue);
-			CierreCtaExcelExporter exporter = new CierreCtaExcelExporter(estadoFinal, mesDistribucion, mesLiqEgreso, ultimoMesLiq);
-			exporter.export(response);
-				
+			CierreCtaExcelExportResumen exporter = new CierreCtaExcelExportResumen(estadoFinal, mesDistribucion, mesLiqEgreso, ultimoMesLiq);
+			exporter.export(response);			
 			}
 			catch(Exception e) {
 				throw new Exception(e.getMessage());
 			}
 	}
 	
-	private void estadoCtaFromDatosCierre(EstadoDeCtaCierre estadoFinal, DatosCierreCta datosCierre) {
+	private BigDecimal sumaBasicos(String aniomes1, String aniomes2, Integer tarjeta) throws Exception {
+		BigDecimal totbasico = BigDecimal.ZERO;
+
+		List<SueldoMes> lstSueldoMes = sueldoMesRepository.getByPeriodoAndTarjeta(aniomes1, aniomes2, tarjeta);
+		for(SueldoMes sm : lstSueldoMes) {
+			totbasico = totbasico.add(sm.getSueldomes());
+		}
+		return totbasico;
+	}
+
+	private void estadoCtaFromDatosCierre(EstadoDeCtaCierre estadoFinal, DatosCierreCta datosCierre) throws Exception{
 
 		Gplantahist funch = gplantahistRepository.getByTarjeta(datosCierre.getTarjeta());
+		
+		BigDecimal basicoActual = gcargoRepository.findById(funch.getGcargos_id()).get().getBasico();
+
+		int days = datosCierre.getFechaEgreso().getDayOfMonth();
+		BigDecimal bddays = new BigDecimal(String.valueOf(days));
+		
+		BigDecimal bdTreinta = new BigDecimal(String.valueOf(30));
+		BigDecimal divDoce = new BigDecimal(String.valueOf(12));
+
+		basicoActual = basicoActual.divide(bdTreinta, 2, RoundingMode.HALF_DOWN);
+		basicoActual = basicoActual.multiply(bddays);
+		estadoFinal.setBasico(basicoActual);
+
+		LocalDate mesAnterior = datosCierre.getFechaEgreso().minusMonths(1);
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		String mesAntes = mesAnterior.format(dtf);
+		String mesliquidacion = mesAntes.substring(0, 4).concat(mesAntes.substring(5, 7));
+		String mesliqinicial;
+		if(datosCierre.getFechaEgreso().getMonth().compareTo(Month.JUNE) <= 0) {
+			mesliqinicial = mesAntes.substring(0, 4).concat("01");
+		}
+		else {
+			mesliqinicial = mesAntes.substring(0, 4).concat("07");
+		}
+		BigDecimal bdSumabasicos = sumaBasicos(mesliqinicial, mesliquidacion, datosCierre.getTarjeta());
+		bdSumabasicos = bdSumabasicos.add(basicoActual);
+		bdSumabasicos = bdSumabasicos.divide(divDoce, 2, RoundingMode.HALF_DOWN);
+		estadoFinal.setSumaBasicos(bdSumabasicos);
+
 		
 		Gplanta funcionario = new Gplanta();
 		funcionario.setNombre(funch.getNombre());
 		funcionario.setTarjeta(funch.getTarjeta());
 		funcionario.setEmail(funch.getEmail());
-		
 		
 		estadoFinal.setAporteTotal(datosCierre.getAporteHaberes());
 		estadoFinal.setAporteTotalSobreAguinaldo(datosCierre.getAporteAguinaldo());

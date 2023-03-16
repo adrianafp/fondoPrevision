@@ -130,16 +130,32 @@ public class CierreCtaExcelExporter {
 		cell = row.createCell(0);
 		cell.setCellValue("Aporte del último mes hasta el " + fegreso);
 		cell.setCellStyle(style);
+		cell = row.createCell(5);
+		cell.setCellValue(estadoCta.getAporteTotal().doubleValue());
+		cell.setCellStyle(style);
 		
+		String sbasico = String.valueOf(estadoCta.getBasico().doubleValue());
 		String ssueldo = String.valueOf(estadoCta.getSueldoUltimoMes().doubleValue());
+		
+		row = sheet.createRow(rowcount);
+		cell = row.createCell(1);
+		if(estadoCta.getBasico().compareTo(BigDecimal.ZERO) > 0) {
+			cell.setCellValue("% aporte s/USD " + sbasico);
+			cell = row.createCell(5);
+			cell.setCellValue(estadoCta.getAporteFun().doubleValue());
+		}
+		else {
+			cell.setCellValue("Ya incluido en el cierre mensual");
+		}
+		
+		rowcount += 1;
 		
 		row = sheet.createRow(rowcount);
 		cell = row.createCell(1);
 		if(estadoCta.getSueldoUltimoMes().compareTo(BigDecimal.ZERO) > 0) {
 			cell.setCellValue("% aporte s/USD " + ssueldo);
 			cell = row.createCell(5);
-			cell.setCellValue(estadoCta.getAporteTotal().doubleValue());
-			cell.setCellStyle(styb);		
+			cell.setCellValue(estadoCta.getAportePat().doubleValue());
 		}
 		else {
 			cell.setCellValue("Ya incluido en el cierre mensual");
@@ -158,18 +174,29 @@ public class CierreCtaExcelExporter {
 		cell = row.createCell(0);
 		cell.setCellValue("Aporte Aguinaldo período " + inicioAguinaldo + " - " + fegreso);
 		cell.setCellStyle(style);
+		cell = row.createCell(5);
+		cell.setCellValue(estadoCta.getAporteTotalSobreAguinaldo().doubleValue());
+		cell.setCellStyle(style);
 		
 		String iaguinaldo = String.valueOf(estadoCta.getImporteAguinaldo().doubleValue());
+		String isumaBasicos = String.valueOf(estadoCta.getSumaBasicos().doubleValue());
 		
-		row = sheet.createRow(rowcount);
+		row = sheet.createRow(rowcount++);
 		cell = row.createCell(1);
 		if(estadoCta.getImporteAguinaldo().compareTo(BigDecimal.ZERO) > 0) {
 			cell.setCellValue("% aporte s/USD " + iaguinaldo);
 			cell = row.createCell(5);
-			cell.setCellValue(estadoCta.getAporteTotalSobreAguinaldo().doubleValue());
-			cell.setCellStyle(styb);			
+			cell.setCellValue(estadoCta.getAportePatAgui().doubleValue());
 		}
 
+		row = sheet.createRow(rowcount);
+		cell = row.createCell(1);
+		if(estadoCta.getSumaBasicos().compareTo(BigDecimal.ZERO) > 0) {
+			cell.setCellValue("% aporte s/USD " + isumaBasicos);
+			cell = row.createCell(5);
+			cell.setCellValue(estadoCta.getAporteFunAgui().doubleValue());
+		}
+		
 		if(estadoCta.getImporteLicencia().compareTo(BigDecimal.ZERO) > 0) {
 			rowcount += 2;
 			row = sheet.createRow(rowcount++);
