@@ -144,7 +144,7 @@ public class SaldosHistoriaRepositoryCustomImpl implements SaldosHistoriaReposit
 		BigDecimal sumaNumerales = (BigDecimal) entityManager.createNativeQuery("select SUM(x.numerales) from " + 
 				"(select sh.idfsaldoshistoria, sh.tarjeta, sh.numerales from fsaldoshistoria sh where " + 
 				"sh.idfsaldoshistoria IN (select max(fsh.idfsaldoshistoria) from fsaldoshistoria fsh where " + 
-				"fsh.mesliquidacion =:ml group by fsh.tarjeta)) as x")
+				"fsh.mesliquidacion =:ml  and fsh.motivo not like '%cierre de Cuenta' group by fsh.tarjeta)) as x")
 				.setParameter("ml", aniomes)
 				.getSingleResult();
 		

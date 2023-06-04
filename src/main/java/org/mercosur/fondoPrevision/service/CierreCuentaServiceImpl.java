@@ -19,6 +19,7 @@ import org.mercosur.fondoPrevision.entities.Prestamo;
 import org.mercosur.fondoPrevision.entities.SaldoPrestamosAcum;
 import org.mercosur.fondoPrevision.entities.Saldos;
 import org.mercosur.fondoPrevision.entities.SaldosHistoria;
+import org.mercosur.fondoPrevision.entities.SolicitudPrestamo;
 import org.mercosur.fondoPrevision.entities.SueldoMes;
 import org.mercosur.fondoPrevision.entities.TipoMovimiento;
 import org.mercosur.fondoPrevision.entities.User;
@@ -584,7 +585,8 @@ public class CierreCuentaServiceImpl implements CierreCuentaService{
 			throw new Exception("falló el proceso de pasaje a históricos de Movimientos");
 		}
 		
-		if(estadoCta.getLstPrst() != null && !estadoCta.getLstPrst().isEmpty()) {
+//		if(estadoCta.getLstPrst() != null && !estadoCta.getLstPrst().isEmpty()) {
+		if(!estadoCta.getLstPrst().isEmpty()) {
 			try {
 				prestamoshistRepository.insertByTarjeta(funcionario.getTarjeta());
 				prestamoRepository.deleteByTarjeta(funcionario.getTarjeta());
@@ -605,7 +607,12 @@ public class CierreCuentaServiceImpl implements CierreCuentaService{
 			userService.deleteUser(user.getId());
 			saldosRepository.deleteByTarjeta(funcionario.getTarjeta());
 			gvinculoRepository.deleteByTarjeta(funcionario.getTarjeta());
-			solicitudPrstRepository.deleteByTarjeta(funcionario.getTarjeta());
+			
+			List<SolicitudPrestamo> lstSolPrst = solicitudPrstRepository.getAllByGplantaId(funcionario.getIdgplanta());
+			if(!lstSolPrst.isEmpty()) {
+				solicitudPrstRepository.deleteByTarjeta(funcionario.getTarjeta());				
+			}
+			saldoPrestamosRepository.deleteByTarjeta(funcionario.getTarjeta());
 			gplantaRepository.deleteByTarjeta(funcionario.getTarjeta());	
 			guardarDatosCierre(estadoCta);		
 		}catch(Exception e) {
